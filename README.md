@@ -56,6 +56,22 @@ src/
 See [PLAN.md](PLAN.md) for the full product and technical design, including the mechanics
 of stars, skips, streaks, and rewards.
 
+## Deploy (Cloudflare Pages)
+
+This is a static PWA served from the domain root. Connect the repo in the Cloudflare
+Pages dashboard with:
+
+| Setting | Value |
+|---|---|
+| Framework preset | None (or Vite) |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node version | `22` (pinned via `.nvmrc`) |
+
+`public/_redirects` (`/* /index.html 200`) provides the SPA fallback so client-side
+routes resolve, and the service worker uses an `index.html` navigate fallback for
+offline deep links. No environment variables are required.
+
 ## Roadmap
 
 Implemented: P0–P7 (full offline app). Not yet built: optional accounts + cloud sync for
