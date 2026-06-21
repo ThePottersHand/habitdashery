@@ -103,6 +103,58 @@ export async function getHabitsForCycle(cycleId: number): Promise<Habit[]> {
   return rows.sort((a, b) => a.order - b.order);
 }
 
+export interface EditHabitRow {
+  id?: number; // present = existing habit, absent = new
+  type: HabitType;
+  name: string;
+  daysOfWeek: number[];
+}
+
+/**
+ * Apply edits to the active cycle's habits: rename, reschedule, add, and remove.
+ * Removed habits take their day-entries with them. Today's entries are
+ * re-synced and derived state recomputed so changes show immediately.
+ */
+export async function updateCycleHabits(cycleId: number, rows: EditHabitRow[]): Promise<void> {
+  const existing = await getHabitsForCycle(cycleId);
+  const keep = new Set(rows.filter((r) => r.id != null).map((r) => r.id));
+
+  await db.transaction("rw", db.habits, db.entries, async () => {
+    // Delete removed habits and their entries.
+    for (const h of existing) {
+      if (h.id != null && !keep.has(h.id)) {
+        await db.entries.where("habitId").equals(h.id).delete();
+        await db.habits.delete(h.id);
+      }
+    }
+    // Update existing / add new, preserving on-screen order.
+    let order = 0;
+    for (const r of rows) {
+      const name = r.name.trim();
+      if (!name) continue;
+      const daysOfWeek = r.daysOfWeek.length ? r.daysOfWeek : ALL_DAYS;
+      if (r.id != null) {
+        await db.habits.update(r.id, { name, daysOfWeek, order });
+      } else {
+        await db.habits.add({ cycleId, type: r.type, name, order, daysOfWeek });
+      }
+      order++;
+    }
+  });
+
+  // Re-sync today's entries to the new schedule and recompute.
+  const cycle = await getActiveCycle();
+  if (cycle?.id) {
+    const today = currentHabitDate(cycle.dayStartHour);
+    const habits = await getHabitsForCycle(cycle.id);
+    const scheduled = habits.filter((h) => h.daysOfWeek.includes(dayjs(today).day()));
+    const dayId = await ensureToday(cycle.id, today, scheduled);
+    await recomputeDay(dayId);
+  } else {
+    await recomputeDerived();
+  }
+}
+
 // --- Daily check-off (P2) ---
 
 /** The habit-date "now" falls in, accounting for a custom day-start hour. */

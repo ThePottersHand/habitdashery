@@ -1,8 +1,11 @@
 import { useRef } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import EditHabits from "../components/EditHabits";
 import { THEMES, applyTheme } from "../config/themes";
 import {
   exportData,
+  getActiveCycle,
+  getHabitsForCycle,
   getMeta,
   importData,
   resetAll,
@@ -20,6 +23,11 @@ import {
 
 export default function Settings() {
   const meta = useLiveQuery(() => getMeta(), []);
+  const cycleHabits = useLiveQuery(async () => {
+    const cycle = await getActiveCycle();
+    if (!cycle?.id) return null;
+    return { cycleId: cycle.id, habits: await getHabitsForCycle(cycle.id) };
+  }, []);
   const { canInstall, installed, promptInstall } = useInstallPrompt();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +88,13 @@ export default function Settings() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-white">Settings</h1>
+
+      {/* Edit habits */}
+      {cycleHabits && (
+        <Section title="Habits">
+          <EditHabits cycleId={cycleHabits.cycleId} habits={cycleHabits.habits} />
+        </Section>
+      )}
 
       {/* Theme */}
       <Section title="Theme">

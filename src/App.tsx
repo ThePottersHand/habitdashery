@@ -39,7 +39,7 @@ export default function App() {
 
   return (
     <div className="mx-auto flex h-full max-w-md flex-col">
-      <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">
+      <main className="pt-safe flex-1 overflow-y-auto px-4 pb-24">
         <Routes>
           <Route path="/setup" element={<Setup />} />
           <Route path="/review" element={<Review />} />
