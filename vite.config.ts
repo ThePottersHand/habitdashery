@@ -25,8 +25,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,ico,png,woff2}"],
         // SPA: serve the app shell for client-side routes (deep links work offline).
-        navigateFallback: "index.html",
-        navigateFallbackDenylist: [/^\/_redirects$/]
+        navigateFallback: "index.html"
       },
       devOptions: { enabled: true }
     })

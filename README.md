@@ -56,21 +56,25 @@ src/
 See [PLAN.md](PLAN.md) for the full product and technical design, including the mechanics
 of stars, skips, streaks, and rewards.
 
-## Deploy (Cloudflare Pages)
+## Deploy (Cloudflare)
 
-This is a static PWA served from the domain root. Connect the repo in the Cloudflare
-Pages dashboard with:
+This is a static PWA served from the domain root. It deploys as a **Worker with static
+assets** via [`wrangler.jsonc`](wrangler.jsonc):
 
 | Setting | Value |
 |---|---|
-| Framework preset | None (or Vite) |
 | Build command | `npm run build` |
-| Build output directory | `dist` |
+| Deploy command | `npx wrangler deploy` (default for Workers Builds) |
 | Node version | `22` (pinned via `.nvmrc`) |
 
-`public/_redirects` (`/* /index.html 200`) provides the SPA fallback so client-side
-routes resolve, and the service worker uses an `index.html` navigate fallback for
-offline deep links. No environment variables are required.
+SPA routing is handled by `assets.not_found_handling: "single-page-application"` in
+`wrangler.jsonc`, which returns `index.html` for unknown routes so client-side routes
+(`/progress`, `/rewards`, …) resolve. The service worker also uses an `index.html`
+navigate fallback for offline deep links. No environment variables are required.
+
+> Using **classic Cloudflare Pages** instead? Skip `wrangler.jsonc` and add a
+> `public/_redirects` file containing `/* /index.html 200` — Pages accepts that form,
+> but the Workers asset uploader rejects it as a redirect loop.
 
 ## Roadmap
 

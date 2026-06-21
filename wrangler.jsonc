@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "habitdashery",
+  "compatibility_date": "2026-06-01",
+  // Static-assets-only Worker: serve the built PWA from dist/.
+  // SPA handling returns index.html (200) for unknown routes so client-side
+  // routing (/progress, /rewards, …) and offline deep links resolve.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
